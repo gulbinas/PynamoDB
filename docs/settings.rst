@@ -66,7 +66,7 @@ should the server not return consumed capacity information in an
 effort to prevent unintentional capacity usage..
 
 dax_write_endpoints
-------------------
+-------------------
 
 Default: ``[]``
 

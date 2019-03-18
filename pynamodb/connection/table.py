@@ -22,7 +22,7 @@ class TableConnection(object):
                  aws_secret_access_key=None,
                  dax_write_endpoints=None,
                  dax_read_endpoints=None,
-                 fall_back_to_dynamodb=False):
+                 fallback_to_dynamodb=False):
         if not dax_read_endpoints:
             dax_read_endpoints = []
         if not dax_write_endpoints:
@@ -39,7 +39,7 @@ class TableConnection(object):
                                      base_backoff_ms=base_backoff_ms,
                                      dax_write_endpoints=dax_write_endpoints,
                                      dax_read_endpoints=dax_read_endpoints,
-                                     fall_back_to_dynamodb=fall_back_to_dynamodb)
+                                     fallback_to_dynamodb=fallback_to_dynamodb)
 
         if aws_access_key_id and aws_secret_access_key:
             self.connection.session.set_credentials(aws_access_key_id,

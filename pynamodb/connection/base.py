@@ -22,11 +22,7 @@ from six.moves import range
 
 from pynamodb.compat import NullHandler
 from pynamodb.connection.util import pythonic
-from pynamodb.connection.dax import (
-    OP_READ,
-    OP_WRITE,
-    DaxClient,
-)
+from pynamodb.connection.dax import (OP_READ, OP_WRITE, DaxClient)
 from pynamodb.constants import (
     RETURN_CONSUMED_CAPACITY_VALUES, RETURN_ITEM_COLL_METRICS_VALUES, COMPARISON_OPERATOR_VALUES,
     RETURN_ITEM_COLL_METRICS, RETURN_CONSUMED_CAPACITY, RETURN_VALUES_VALUES, ATTR_UPDATE_ACTIONS,
@@ -230,15 +226,11 @@ class Connection(object):
     def __init__(self, region=None, host=None, session_cls=None,
                  request_timeout_seconds=None, max_retry_attempts=None,
                  base_backoff_ms=None, dax_write_endpoints=None, dax_read_endpoints=None,
-                 fall_back_to_dynamodb=False):
+                 fallback_to_dynamodb=False):
         self._tables = {}
         self.host = host
-        if not dax_write_endpoints:
-            dax_write_endpoints = []
-        if not dax_read_endpoints:
-            dax_read_endpoints = []
-        self.dax_write_endpoints = dax_write_endpoints
-        self.dax_read_endpoints = dax_read_endpoints
+        self.dax_write_endpoints = dax_write_endpoints or []
+        self.dax_read_endpoints = dax_read_endpoints or []
         self._local = local()
         self._requests_session = None
         self._client = None
@@ -269,10 +261,10 @@ class Connection(object):
         else:
             self._base_backoff_ms = get_settings_value('base_backoff_ms')
 
-        if fall_back_to_dynamodb is not None:
-            self._fall_back_to_dynamodb = fall_back_to_dynamodb
+        if fallback_to_dynamodb is not None:
+            self._fallback_to_dynamodb = fallback_to_dynamodb
         else:
-            self._fall_back_to_dynamodb = get_settings_value('fall_back_to_dynamodb')
+            self._fallback_to_dynamodb = get_settings_value('fallback_to_dynamodb')
 
     def __repr__(self):
         return six.u("Connection<{0}>".format(self.client.meta.endpoint_url))
@@ -330,9 +322,7 @@ class Connection(object):
         req_uuid = uuid.uuid4()
 
         self.send_pre_boto_callback(operation_name, req_uuid, table_name)
-
         data = self._make_api_call(operation_name, operation_kwargs)
-
         self.send_post_boto_callback(operation_name, req_uuid, table_name)
 
         if data and CONSUMED_CAPACITY in data:
@@ -367,8 +357,8 @@ class Connection(object):
             elif operation_name in OP_READ.keys() and self.dax_read_endpoints:
                 return self.dax_read_client.dispatch(operation_name, operation_kwargs)
         except DaxClientError as err:
-            if not self._fall_back_to_dynamodb:
-                raise err
+            if not self._fallback_to_dynamodb:
+                raise
 
         operation_model = self.client._service_model.operation_model(operation_name)
         request_dict = self.client._convert_to_request_dict(
